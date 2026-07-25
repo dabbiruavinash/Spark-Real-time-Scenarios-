@@ -1,0 +1,79 @@
+ai_query - 
+This query utilizes the ai_query frunctions to summarize customer reviews.
+It employs the "databricks-meta-llama-3-3-70b-instruct" model to generate a 20-word summary.
+
+select review, ai_query("databricks-meta-llama-3-3-70b-instruct", "Summarize the given text in 20 words: " || review) as summarized_review from sample.bakehouse.media_customer_reviews limit 5;
+
+ai_classify - 
+automatically classifies a given text into one of the provided categories
+
+select ai_classify(ingredient, ARRAY('Nuts', 'Spices', 'Grains', 'Flavourings')) as category from samples.bakehouse.sales_suppliers LIMIT 10;
+
+ai_analyze_sentiment, ai_extract, ai_mask -
+analyze sentiment, extract entities, and mask sensitive data in customer reviews.
+
+select review,
+ai_analyze_sentiment(review) as sentiment,
+ai_extract(review, ARRAY('store_name', 'location', 'product', 'rating')) as extract_entities,
+ai_mask(review, ARRAY('store_name, 'location', 'product', 'rating')) as masked_review from samples.bakehouse,media_customer_reviews LIMIT 10;
+
+ai_summarize, ai_translate -
+ai_summarize : Summarize the review into a shorter versioin (20 words in this case)
+ai_translate : Translate the review into hindi('hi')
+
+select review,
+ai_summarize(review, 20) as summary,
+ai_translate(review, 'hi') as hindi_translated from samples.bakehouse.media_customer_reviews LIMIT 5;
+
+ai_similarity - 
+function compare two, text columns (text1, text2) and returns a similarity score (typically between 0 and 1)
+A higher score means the texts are more similar.
+
+select 
+text1, --first text column
+text2, -- second text column ai_similarity(text1, text2) as similarity -- Similarity score between text1 and text2 from dbw_training.demo.mytable;
+
+other AI functions
+
+ai_fix_grammar -> Fix grammatical error in text
+Scans input text and corrects spelling, punctuation, syntax, and stylistic errors. It returns grammatically clean, fluent text while preserving the original meaning.
+
+input_text = "He go to market yesterday for buy vegetable."
+corrected = ai_fix_grammar(input_text)
+print(corrected)
+# Output: "He went to the market yesterday to buy vegetables."
+
+ai_gen -> Generate text based on user input (similar to ai_query)
+Generates new content (text, code, ideas, summaries, etc.) based on a prompt or context. It’s a general-purpose generative AI call.
+
+prompt = "Write a polite email to reschedule a meeting from Monday to Wednesday."
+email = ai_gen(prompt)
+print(email)
+# Output: "Subject: Rescheduling Our Meeting\n\nDear Team,\n\nI hope this email finds you well. Due to an unavoidable conflict, I would like to move our meeting from Monday to Wednesday at the same time..."
+
+ai_parse_document (Beta) -> Extract sturctured content from unstructured documents
+Takes an unstructured document (PDF, Word, image, scanned file, etc.) and extracts structured information—like key fields, tables, named entities, or a summary.
+
+doc = "invoice_123.pdf"
+parsed = ai_parse_document(doc, extract=["invoice_number", "total_amount", "date"])
+print(parsed)
+# Output: {"invoice_number": "INV-2026-001", "total_amount": "$4,250.00", "date": "2026-07-25"}
+
+ai_forecast -> Forcast data
+Uses historical data (time series or tabular) to predict future values—sales, demand, weather, traffic, etc. It can handle seasonality, trends, and external factors.
+
+history = [120, 135, 150, 165, 180, 200]  # monthly sales for last 6 months
+forecast = ai_forecast(history, horizon=3)  # predict next 3 months
+print(forecast)
+# Output: [215, 230, 248]  (predicted sales)
+
+vector_search -> query vector search
+Converts a query into a numerical vector (embedding) and searches a vector database for semantically similar items (documents, images, products, etc.) — it’s the engine behind RAG (Retrieval-Augmented Generation) and semantic search.
+
+query = "laptop with long battery life"
+results = vector_search(query, top_k=3, collection="products")
+print(results)
+# Output: [
+#   {"id": "p101", "text": "UltraBook 15 – 12hr battery", "score": 0.94},
+#   {"id": "p204", "text": "PowerLite 14 – 10hr battery", "score": 0.89},
+#   {"id": "p309", "text": "EcoNote – 8hr battery", "score": 0.76}]
